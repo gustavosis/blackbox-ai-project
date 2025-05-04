@@ -23,7 +23,10 @@ module.exports = (app) => {
     secret: config.session.secret,
     resave: config.session.resave,
     saveUninitialized: config.session.saveUninitialized,
-    cookie: { secure: false } // set to true if using https
+    cookie: { 
+      secure: false, // set to true if using https
+      sameSite: 'lax' // allow cookies in local dev
+    }
   }));
 
   // Basic middleware
