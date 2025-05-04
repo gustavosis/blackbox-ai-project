@@ -107,7 +107,7 @@
                         </div>
                     </div>
                     <div class="flex justify-end mt-6">
-                        <button onclick="saveUserProfileChanges()" 
+                        <button id="saveProfileBtn" type="button"
                                 class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
                             Guardar Cambios
                         </button>
@@ -237,12 +237,13 @@
                 </div>
 
                 <!-- Save Button -->
-                <div class="flex justify-end">
+                <!-- Removed duplicate save button to avoid conflicts -->
+                <!-- <div class="flex justify-end">
                         <button onclick="saveUserProfileChanges()" 
                                 class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
                             Guardar Cambios
                         </button>
-                </div>
+                </div> -->
             </div>
         </div>
     </main>
