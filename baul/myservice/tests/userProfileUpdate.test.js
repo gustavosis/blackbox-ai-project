@@ -44,4 +44,24 @@ describe('User Profile Update', () => {
       expect(row.phone).toBe('1234567890');
     });
   });
+
+  it('should upload and save profile image successfully', async () => {
+    const response = await request(app)
+      .put('/user-profile')
+      .field('name', 'Test')
+      .field('lastname', 'User')
+      .field('service', 'Test Service')
+      .field('email', 'testuser@example.com')
+      .field('phone', '1234567890')
+      .attach('profileImage', 'tests/sample-profile-image.txt');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe('Profile updated successfully');
+
+    // Verify profileImage field is updated in DB
+    db.get('SELECT profileImage FROM users WHERE id = 1', (err, row) => {
+      expect(row.profileImage).toBeDefined();
+      expect(row.profileImage).toMatch(/uploads\/1\//);
+    });
+  });
 });
