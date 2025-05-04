@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ajustes de Cuenta - MyService PRO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9fafb;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-lg max-w-3xl w-full p-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-900">Ajustes de Cuenta</h1>
+
+    <form id="accountSettingsForm" class="space-y-6" enctype="multipart/form-data">
+      <div>
+        <label for="roleSelect" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Usuario</label>
+        <select id="roleSelect" name="role" class="w-full border border-gray-300 rounded-md p-2">
+          <option value="user">Usuario</option>
+          <option value="provider">Proveedor</option>
+          <option value="company">Empresa</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="nameInput" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+          <input type="text" id="nameInput" name="name" required class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="lastnameInput" class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+          <input type="text" id="lastnameInput" name="lastname" required class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+          <input type="email" id="emailInput" name="email" required class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="phoneInput" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+          <input type="tel" id="phoneInput" name="phone" class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="serviceInput" class="block text-sm font-medium text-gray-700 mb-1">Servicio / Profesión</label>
+          <input type="text" id="serviceInput" name="service" class="w-full border border-gray-300 rounded-md p-2" />
+        </div>
+        <div>
+          <label for="profileImageInput" class="block text-sm font-medium text-gray-700 mb-1">Foto de Perfil</label>
+          <input type="file" id="profileImageInput" name="profileImage" accept="image/*" class="w-full" />
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" id="saveSettingsBtn" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors">
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script src="account-settings.js"></script>
+</body>
+</html>
