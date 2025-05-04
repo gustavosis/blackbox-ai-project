@@ -78,6 +78,10 @@
                                         <p id="userProfileRole" class="text-sm text-gray-600">Proveedor de Servicios</p>
                                     </div>
                                 </div>
+                                <div class="mt-4">
+                                    <label for="profileImageUpload" class="block text-sm font-medium text-gray-700">Subir Imagen de Perfil</label>
+<input type="file" id="profileImageUpload" name="profileImage" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                </div>
                             </div>
                             <div class="py-2">
                                 <a href="settings.html" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-150">
@@ -242,53 +246,62 @@
 
     <script>
         // User data management
-        function loadUserData() {
-            const userData = JSON.parse(localStorage.getItem('userData')) || {
-                name: 'Usuario',
-                role: 'Proveedor de Servicios',
-                profileImage: null,
-                stats: {
-                    completedServices: 0,
-                    averageRating: '--',
-                    monthlyEarnings: 0,
-                    pendingRequests: 0
-                }
-            };
+        async function loadUserData() {
+            try {
+                const response = await fetch('/user-profile', { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                const data = await response.json();
+                const userData = data.user;
 
-            // Update profile
-            document.getElementById('userProfileName').textContent = userData.name;
-            document.getElementById('userProfileRole').textContent = userData.role;
-            
-            // Update profile images
-            const profileImages = ['userProfileImage', 'userMenuImage'];
-            profileImages.forEach(id => {
-                const img = document.getElementById(id);
-                if (img) {
-                    img.src = userData.profileImage || 
-                             `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=0D8ABC&color=fff`;
-                }
-            });
+                // Update localStorage userData with fresh data
+                localStorage.setItem('userData', JSON.stringify(userData));
 
-            // Update stats
-            document.getElementById('completedServices').textContent = userData.stats.completedServices;
-            document.getElementById('averageRating').textContent = userData.stats.averageRating;
-            document.getElementById('monthlyEarnings').textContent = `$${userData.stats.monthlyEarnings}`;
-            document.getElementById('pendingRequests').textContent = userData.stats.pendingRequests;
+                // Update profile
+                document.getElementById('userProfileName').textContent = userData.name;
+                document.getElementById('userProfileRole').textContent = userData.service || userData.role || '';
 
-            // Update rating stars
-            const rating = parseFloat(userData.stats.averageRating) || 0;
-            const starsContainer = document.getElementById('ratingStars');
-            if (starsContainer) {
-                const stars = starsContainer.getElementsByTagName('i');
-                for (let i = 0; i < stars.length; i++) {
-                    if (i < Math.floor(rating)) {
-                        stars[i].className = 'fas fa-star text-yellow-500';
-                    } else if (i === Math.floor(rating) && rating % 1 > 0) {
-                        stars[i].className = 'fas fa-star-half-alt text-yellow-500';
-                    } else {
-                        stars[i].className = 'fas fa-star text-gray-300';
+                // Update profile images
+                const profileImages = ['userProfileImage', 'userMenuImage'];
+                profileImages.forEach(id => {
+                    const img = document.getElementById(id);
+                    if (img) {
+                        if (userData.profileImage) {
+                            if (!userData.profileImage.startsWith('http') && !userData.profileImage.startsWith('/')) {
+                                img.src = '/uploads/' + userData.profileImage;
+                            } else {
+                                img.src = userData.profileImage;
+                            }
+                        } else {
+                            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=0D8ABC&color=fff`;
+                        }
+                    }
+                });
+
+                // Update stats
+                document.getElementById('completedServices').textContent = userData.stats?.completedServices || 0;
+                document.getElementById('averageRating').textContent = userData.stats?.averageRating > 0 ? 
+                    userData.stats.averageRating.toFixed(1) : '--';
+                document.getElementById('monthlyEarnings').textContent = `$${userData.stats?.monthlyEarnings || 0}`;
+                document.getElementById('pendingRequests').textContent = userData.stats?.pendingRequests || 0;
+
+                // Update rating stars
+                const rating = parseFloat(userData.stats?.averageRating) || 0;
+                const starsContainer = document.getElementById('ratingStars');
+                if (starsContainer) {
+                    const stars = starsContainer.getElementsByTagName('i');
+                    for (let i = 0; i < stars.length; i++) {
+                        stars[i].className = 'fas fa-star text-gray-300'; // Default gray stars
+                        if (rating > 0) {
+                            if (i < Math.floor(rating)) {
+                                stars[i].className = 'fas fa-star text-yellow-500';
+                            } else if (i === Math.floor(rating) && rating % 1 > 0) {
+                                stars[i].className = 'fas fa-star-half-alt text-yellow-500';
+                            }
+                        }
                     }
                 }
+            } catch (error) {
+                console.error('Error loading user data:', error);
             }
         }
 
