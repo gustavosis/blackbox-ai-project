@@ -10,7 +10,6 @@ if (!fs.existsSync(config.uploadDir)) {
   fs.mkdirSync(config.uploadDir);
 }
 
-  
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
@@ -106,6 +105,7 @@ app.use('/user-profile', userProfileRoutes);
 
 // Serve static files - moved after API routes
 app.use('/', express.static(path.join(__dirname, 'public')));
+app.use('/account-settings', express.static(path.join(__dirname, 'public', 'account-settings')));
 
 // Serve index.html on root route
 app.get('/', (req, res) => {
@@ -117,7 +117,11 @@ app.get('/provider-view.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'provider-view.html'));
 });
 
-  
+// Serve new account settings page
+app.get('/account-settings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'account-settings', 'index.html'));
+});
+
 // Error logging middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
