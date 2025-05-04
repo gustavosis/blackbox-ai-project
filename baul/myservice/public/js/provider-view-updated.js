@@ -1,6 +1,6 @@
-async function loadUserData() {
+  async function loadUserData() {
     try {
-        const response = await fetch('/user-profile');
+        const response = await fetch('/user-profile', { credentials: 'include' });
         if (!response.ok) throw new Error('Failed to fetch user data');
         const data = await response.json();
         const userData = data.user;
@@ -13,13 +13,33 @@ async function loadUserData() {
         document.getElementById('userProfileName').textContent = userData.name + (userData.lastname ? ' ' + userData.lastname : '');
         document.getElementById('userProfileRole').textContent = userData.service || '';
 
+        // Update form input fields with user data
+        const nameInput = document.getElementById('nameInput');
+        const lastnameInput = document.getElementById('lastnameInput');
+        const serviceInput = document.getElementById('serviceInput');
+        const emailInput = document.getElementById('emailInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const profileImageUpload = document.getElementById('profileImageUpload');
+
+        if (nameInput) nameInput.value = userData.name || '';
+        if (lastnameInput) lastnameInput.value = userData.lastname || '';
+        if (serviceInput) serviceInput.value = userData.service || '';
+        if (emailInput) emailInput.value = userData.email || '';
+        if (phoneInput) phoneInput.value = userData.phone || '';
+        if (profileImageUpload) profileImageUpload.value = '';
+
         // Update profile images
         const profileImages = ['userProfileImage', 'userMenuImage'];
         profileImages.forEach(id => {
             const img = document.getElementById(id);
             if (img) {
                 if (userData.profileImage) {
-                    img.src = userData.profileImage;
+                    // Prepend /uploads/ if profileImage is a relative path without protocol
+                    if (!userData.profileImage.startsWith('http') && !userData.profileImage.startsWith('/')) {
+                        img.src = '/uploads/' + userData.profileImage;
+                    } else {
+                        img.src = userData.profileImage;
+                    }
                 } else {
                     img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name + ' ' + userData.lastname)}&background=0D8ABC&color=fff`;
                 }
@@ -54,31 +74,50 @@ async function loadUserData() {
     }
 }
 
+// Added flag to prevent multiple simultaneous save requests
+let isSavingProfile = false;
+
 async function saveUserProfileChanges() {
+    if (isSavingProfile) {
+        showNotification('La actualización ya está en proceso, por favor espera.', 'error');
+        return;
+    }
+    isSavingProfile = true;
+
     const nameInput = document.getElementById('nameInput');
     const lastnameInput = document.getElementById('lastnameInput');
     const serviceInput = document.getElementById('serviceInput');
     const emailInput = document.getElementById('emailInput');
     const phoneInput = document.getElementById('phoneInput');
+    const profileImageUpload = document.getElementById('profileImageUpload');
+
+    console.log('Profile image upload files:', profileImageUpload ? profileImageUpload.files.length : 'no input element');
+    if (profileImageUpload && profileImageUpload.files.length > 0) {
+        console.log('Profile image file name:', profileImageUpload.files[0].name);
+    }
 
     if (!nameInput.value.trim() || !lastnameInput.value.trim() || !serviceInput.value.trim() || !emailInput.value.trim() || !phoneInput.value.trim()) {
         showNotification('Por favor, completa todos los campos obligatorios', 'error');
+        isSavingProfile = false;
         return;
     }
 
-    const updatedUserData = {
-        name: nameInput.value.trim(),
-        lastname: lastnameInput.value.trim(),
-        service: serviceInput.value.trim(),
-        email: emailInput.value.trim(),
-        phone: phoneInput.value.trim()
-    };
+    const formData = new FormData();
+    formData.append('name', nameInput.value.trim());
+    formData.append('lastname', lastnameInput.value.trim());
+    formData.append('service', serviceInput.value.trim());
+    formData.append('email', emailInput.value.trim());
+    formData.append('phone', phoneInput.value.trim());
+
+    if (profileImageUpload && profileImageUpload.files.length > 0) {
+        formData.append('profileImage', profileImageUpload.files[0]);
+    }
 
     try {
         const response = await fetch('/user-profile', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedUserData)
+            credentials: 'include',
+            body: formData
         });
 
         if (!response.ok) {
@@ -86,18 +125,27 @@ async function saveUserProfileChanges() {
             throw new Error(errorData.error || 'Error al actualizar el perfil');
         }
 
+        const data = await response.json();
+
         // Refresh user data in UI
         await loadUserData();
 
+        // Update localStorage userData with latest user info from response
+        if (data.user) {
+            localStorage.setItem('userData', JSON.stringify(data.user));
+        }
         showNotification('Perfil actualizado correctamente');
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        isSavingProfile = false;
     }
 }
 
 // Service requests management
 function renderServiceRequests() {
     const container = document.getElementById('serviceRequestsContainer');
+    if (!container) return;
     
     // Show empty state for service requests
     container.innerHTML = `
@@ -252,6 +300,33 @@ function showNotification(message, type = 'success') {
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', function() {
-    loadUserData();
-    renderServiceRequests();
+    console.log('DOMContentLoaded event fired');
+
+    // Only run profile image related code if profileImageUpload input exists
+    const profileImageUpload = document.getElementById('profileImageUpload');
+    if (profileImageUpload) {
+        loadUserData();
+        renderServiceRequests();
+
+        // Bind save button click event
+        const saveBtn = document.getElementById('saveProfileBtn');
+        if (saveBtn) {
+            console.log('Attaching click event to saveProfileBtn');
+            saveBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('saveProfileBtn clicked');
+                saveUserProfileChanges();
+            });
+        } else {
+            console.log('saveProfileBtn not found');
+        }
+
+        // Bind change event on profile image upload input to auto-save profile image
+        profileImageUpload.addEventListener('change', () => {
+            console.log('Profile image file selected, auto-saving profile...');
+            saveUserProfileChanges();
+        });
+    } else {
+        console.log('profileImageUpload input not found, skipping profile image related code');
+    }
 });
